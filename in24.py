@@ -8,6 +8,7 @@ from os.path import isfile, isdir
 
 
 
+
 dictProject = {'id': '',
                'nThreads' : 1,
                'init' : '',

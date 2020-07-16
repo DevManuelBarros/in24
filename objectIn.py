@@ -5,6 +5,9 @@ import time
 from datetime import datetime
 import apin24
 
+from selenium.webdriver.chrome.options import Options
+from fake_useragent import UserAgent
+
 class objectIn():
 
     __url_base = 'https://www.inmuebles24.com/'
@@ -63,8 +66,19 @@ class objectIn():
         self.__debug = debug
         self.__id_p = id_p
         self.__path_output = path_out + str(nThread) + "/"
-        self.__driver = webdriver.Chrome(ChromeDriverManager().install())
-
+        options = webdriver.ChromeOptions()
+        options.add_argument("start-maximized")
+        options.add_argument("disable-infobars")
+        options.add_argument("--disable-extensions")
+        #self.__driver = webdriver.Chrome(ChromeDriverManager().install())
+        
+        options = Options() 
+        ua = UserAgent()
+        #options.add_argument("--disable-extensions")
+        #options.headless = True
+        userAgent = ua.random
+        options.add_argument(f'user-agent={userAgent}')
+        self.__driver = webdriver.Chrome(chrome_options=options, executable_path='./chromedriver84')
 
     def setFinalPage(self, final_page):
         """setFinalPage
@@ -134,7 +148,7 @@ class objectIn():
         if self.__debug == True:
             self.__saveFile('./result.txt', self.__result_actual_page)
         #obtener el número de registros disponibles
-        self.__get_dict()
+        #self.__get_dict()
         for page in range(self.__number_init_page, self.__final_page+1):
             print('thread: {} - i - {} f - {} - url: {}'.format(self.__t,
                                                                 self.__number_init_page,
@@ -195,10 +209,11 @@ class objectIn():
                 self.__saveFile('dict'+str(cont)+'.txt', str(tmp_dict))
                 cont +=1
             self.__final_dict[value[self.__values[0]]] = self.__clearDict(tmp_dict)
-        if self.__debug == True:
-            self.__saveFile(self.__path_output + str(self.__actual_page) + '.in', str(self.__final_dict))
-        apin24.saveR(self.__final_dict)
         self.__saveFile(self.__path_output + 'c.in', str(self.__actual_page))
+        backup_dict = self.__final_dict
+        result = apin24.saveR(backup_dict)
+        if result == False:
+            self.__saveFile(self.__path_output + str(self.__actual_page) + '.in', str(backup_dict))
         self.__final_dict = {}
         self.__tmp_dict = {}
 
@@ -403,10 +418,12 @@ class objectIn():
             tmpDict['url1200x1200'] = str(tmpPicture['url1200x1200'])
             tmpDict['title'] = str(tmpPicture['title'])
             listPictures.append(tmpDict)
+
         dict_db['inmuebles'] = main
         dict_db['prices'] = prices 
         dict_db['location'] = location
         dict_db['features'] = features
         dict_db['description'] = description
         dict_db['pictures'] = listPictures
+
         return dict_db
